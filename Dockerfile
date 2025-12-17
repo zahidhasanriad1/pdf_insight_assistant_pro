@@ -8,10 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app /app/app
 COPY ui /app/ui
 COPY README.md /app/README.md
-COPY .env.example /app/.env.example
 
 ENV DATA_DIR=/app/data
-RUN mkdir -p /app/data/uploads /app/data/index
 
 EXPOSE 8000
 
