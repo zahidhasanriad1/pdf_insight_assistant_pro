@@ -14,3 +14,4 @@ streamlit>=1.33
 requests>=2.31
 pytest>=8.0
 langchain-huggingface
+python-multipart
