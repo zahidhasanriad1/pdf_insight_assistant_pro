@@ -3,7 +3,7 @@ import requests
 import streamlit as st
 from typing import Dict, Any, List
 
-API = st.secrets.get("API_URL") or os.getenv("API_URL") or "http://127.0.0.1:8000"
+#API = st.secrets.get("API_URL") or os.getenv("API_URL") or "http://127.0.0.1:8000"
 
 st.set_page_config(page_title="PDF Insight Assistant Pro", layout="wide")
 
