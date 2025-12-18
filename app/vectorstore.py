@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable
 
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
 
+try:
+    from langchain_huggingface import HuggingFaceEmbeddings
+except Exception:
+    from langchain_community.embeddings import HuggingFaceEmbeddings
 
 
 def build_embeddings() -> HuggingFaceEmbeddings:
