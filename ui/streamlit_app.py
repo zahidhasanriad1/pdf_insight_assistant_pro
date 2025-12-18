@@ -3,7 +3,7 @@ import requests
 import streamlit as st
 from typing import Dict, Any, List
 
-#API = st.secrets.get("API_URL") or os.getenv("API_URL") or "http://127.0.0.1:8000"
+API = st.secrets.get("API_URL") or os.getenv("API_URL") or "http://127.0.0.1:8000"
 
 st.set_page_config(page_title="PDF Insight Assistant Pro", layout="wide")
 
@@ -63,13 +63,17 @@ def ensure_state():
 ensure_state()
 
 st.markdown("## PDF Insight Assistant Pro")
-st.markdown('<div class="muted">Upload a PDF, then chat with it. Answers include page sources.</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="muted">Upload a PDF, then chat with it. Answers include page sources.</div>',
+    unsafe_allow_html=True
+)
 
 with st.sidebar:
-    st.caption(f"Backend API: {API}")
-
     st.markdown("### Upload")
-    st.markdown('<div class="muted">Backend limit is 25 MB. Keep PDFs smaller for faster indexing.</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="muted">Backend limit is 25 MB. Keep PDFs smaller for faster indexing.</div>',
+        unsafe_allow_html=True
+    )
     pdf = st.file_uploader("Select a PDF", type=["pdf"])
 
     if st.button("Upload and index", use_container_width=True):
@@ -83,18 +87,19 @@ with st.sidebar:
                 st.error(f"Upload failed, status {res.status_code}")
                 st.text(res.text[:800])
                 st.stop()
-            else:
-                data = res.json()
-                st.success("Upload done")
 
-                st.session_state["doc_id"] = data.get("doc_id", "")
-                st.session_state["docs"] = load_documents()
+            data = res.json()
+            st.success("Upload done")
+            st.session_state["doc_id"] = data.get("doc_id", "")
+            st.session_state["docs"] = load_documents()
 
-                if st.session_state["docs"]:
-                    st.session_state["doc_id"] = st.session_state["docs"][0].get(
-                        "doc_id", st.session_state["doc_id"]
-                    )
-                st.rerun()
+            if st.session_state["docs"]:
+                st.session_state["doc_id"] = st.session_state["docs"][0].get(
+                    "doc_id",
+                    st.session_state["doc_id"]
+                )
+
+            st.rerun()
 
     st.write("")
     st.markdown("### Documents")
@@ -121,7 +126,7 @@ with st.sidebar:
     def label(d: Dict[str, Any]) -> str:
         return f'{d.get("filename","unknown")} , chunks {d.get("chunks",0)} , {d.get("created_at","")}'
 
-    label_to_id = {label(d): d.get("doc_id","") for d in docs}
+    label_to_id = {label(d): d.get("doc_id", "") for d in docs}
     options = list(label_to_id.keys())
 
     if options:
@@ -130,6 +135,7 @@ with st.sidebar:
             if v == st.session_state["doc_id"]:
                 current_label = k
                 break
+
         if current_label is None:
             current_label = options[0]
             st.session_state["doc_id"] = label_to_id[current_label]
