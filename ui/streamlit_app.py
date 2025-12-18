@@ -3,7 +3,7 @@ import requests
 import streamlit as st
 from typing import Dict, Any, List
 
-API = os.getenv("API_URL", "http://127.0.0.1:8000")
+API = st.secrets.get("API_URL") or os.getenv("API_URL") or "http://127.0.0.1:8000"
 
 st.set_page_config(page_title="PDF Insight Assistant Pro", layout="wide")
 
@@ -66,6 +66,8 @@ st.markdown("## PDF Insight Assistant Pro")
 st.markdown('<div class="muted">Upload a PDF, then chat with it. Answers include page sources.</div>', unsafe_allow_html=True)
 
 with st.sidebar:
+    st.caption(f"Backend API: {API}")
+
     st.markdown("### Upload")
     st.markdown('<div class="muted">Backend limit is 25 MB. Keep PDFs smaller for faster indexing.</div>', unsafe_allow_html=True)
     pdf = st.file_uploader("Select a PDF", type=["pdf"])
@@ -76,13 +78,23 @@ with st.sidebar:
         else:
             with st.spinner("Uploading and indexing"):
                 res = api_post_file("/upload", pdf.name, pdf.getvalue(), timeout=1200)
+
             if res.status_code != 200:
-                st.error(res.text)
+                st.error(f"Upload failed, status {res.status_code}")
+                st.text(res.text[:800])
+                st.stop()
             else:
                 data = res.json()
                 st.success("Upload done")
+
                 st.session_state["doc_id"] = data.get("doc_id", "")
                 st.session_state["docs"] = load_documents()
+
+                if st.session_state["docs"]:
+                    st.session_state["doc_id"] = st.session_state["docs"][0].get(
+                        "doc_id", st.session_state["doc_id"]
+                    )
+                st.rerun()
 
     st.write("")
     st.markdown("### Documents")
@@ -122,7 +134,11 @@ with st.sidebar:
             current_label = options[0]
             st.session_state["doc_id"] = label_to_id[current_label]
 
-        selected = st.selectbox("Select a document", options=options, index=options.index(current_label))
+        selected = st.selectbox(
+            "Select a document",
+            options=options,
+            index=options.index(current_label) if current_label in options else 0
+        )
         st.session_state["doc_id"] = label_to_id[selected]
 
     st.write("")
@@ -131,7 +147,11 @@ with st.sidebar:
     st.session_state["top_k"] = st.slider("Top K chunks", 1, 12, int(st.session_state["top_k"]))
 
     lang_label = "Bangla" if st.session_state["language"] == "bn" else "English"
-    lang_choice = st.selectbox("Answer language", options=["Bangla", "English"], index=0 if lang_label == "Bangla" else 1)
+    lang_choice = st.selectbox(
+        "Answer language",
+        options=["Bangla", "English"],
+        index=0 if lang_label == "Bangla" else 1
+    )
     st.session_state["language"] = "bn" if lang_choice == "Bangla" else "en"
 
 doc_id = st.session_state["doc_id"]
@@ -199,7 +219,8 @@ else:
                 r = api_post_json("/ask", payload, timeout=600)
 
             if r.status_code != 200:
-                st.error(r.text)
+                st.error(f"Ask failed, status {r.status_code}")
+                st.text(r.text[:800])
             else:
                 data = r.json()
                 answer = data.get("answer", "")
